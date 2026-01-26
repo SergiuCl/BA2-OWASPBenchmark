@@ -1237,10 +1237,7 @@
             -Xmx8G
         </tomcat.jvmargs>
         <tomcat.jvmargs.debug>
-            -Xdebug
-            -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5050
-            -Xnoagent
-            -Djava.compiler=NONE
+            -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5050
         </tomcat.jvmargs.debug>
         <log.directory>${project.build.directory}/log</log.directory>
 
