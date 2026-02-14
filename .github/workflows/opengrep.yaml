@@ -36,7 +36,24 @@ jobs:
       # Runs Opengrep and writes a SARIF report
       - name: Run Opengrep Scan (SARIF)
         run: |
-          opengrep scan --config auto --sarif-output opengrep.sarif .
+          # Optional: ignore common build/generated dirs (or commit a .semgrepignore/.opengrepignore)
+          cat > .semgrepignore <<'EOF'
+          node_modules/
+          dist/
+          build/
+          target/
+          .next/
+          coverage/
+          EOF
+          
+          # Stronger scan: combine multiple configs + stronger taint
+          opengrep scan \
+            --config auto \
+            --config p/owasp-top-ten \
+            --config p/security-audit \
+            --taint-intrafile \
+            --sarif-output opengrep.sarif \
+            .
 
       # Uploads results to Security -> Code scanning alerts
       - name: Upload to GitHub Security Tab
