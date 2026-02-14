@@ -20,7 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Installs cosign so Opengrep's installer can verify signatures
+      # Installs cosign so Opengrep's installer can verify signatures.
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
