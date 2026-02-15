@@ -5,10 +5,10 @@ env:
 
 on:
   push:
-    branches: [ master ]
+    branches: [ codeql-workflow ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ master ]
+    branches: [ codeql-workflow ]
   workflow_dispatch:
 
 jobs:
@@ -20,11 +20,6 @@ jobs:
       contents: read
       security-events: write
     
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'java', 'javascript' ]
-        
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -36,18 +31,19 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
-        languages: ${{ matrix.language }}
         queries: security-extended, security-experimental, security-and-quality
-      
-    - name: Build with Maven
-      run: mvn -DskipTests=true install
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
-      
-    - name: Upload Output
-      uses: actions/upload-artifact@v6
       with:
-        name: ${{ matrix.language }} SARIF
-        path: ${{ runner.workspace }}/results/*.sarif
+        output: results
+
+    - name: Upload SARIF as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: codeql-results
+        path: results/*.sarif
         
