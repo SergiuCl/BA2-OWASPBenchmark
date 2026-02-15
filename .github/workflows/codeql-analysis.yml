@@ -30,8 +30,6 @@ jobs:
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
-      with:
-        queries: default
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v4
