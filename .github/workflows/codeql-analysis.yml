@@ -41,9 +41,14 @@ jobs:
       with:
         output: results
 
+    - name: Merge SARIF files
+      run: |
+        pip install sarif-tools
+        sarif copy results/*.sarif --output results/codeql.sarif
+
     - name: Upload SARIF as artifact
       uses: actions/upload-artifact@v4
       with:
         name: codeql-results
-        path: results/*.sarif
+        path: results/codeql.sarif
         
