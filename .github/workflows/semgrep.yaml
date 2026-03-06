@@ -24,38 +24,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Semgrep CI & Generate SARIF
-        # Configuration to reduce false positives:
-        # 1. Uses Semgrep CI with Pro rules for best inter-file taint analysis
-        # 2. Excludes rules that don't map to OWASP Benchmark categories
-        # 3. Uses .semgrepignore to exclude non-Java files (scorecard, HTML, etc.)
+        # We add '|| true' to ensure the workflow continues even if bugs are found
+        # so that the SARIF file is always uploaded for your research.
         #
-        # Rule exclusions rationale:
-        # - printstacktrace: Code quality, not security (not in benchmark categories)
-        # - cookie-missing-*: Not CWE-614 (securecookie is about setSecure(false))
-        # - django/python/js rules: Irrelevant for Java codebase
-        # - no-direct-response-writer: Overly broad, causes many FPs
-        # - unsafe-reflection/overly-permissive: Not in benchmark categories
-        #
-        # Note: Some false positives remain due to:
-        # - SeparateClassRequest.getTheValue() returns constant "bar" (safe source)
-        # - Always-true conditions like (7*42)-86>200 making tainted paths unreachable
-        # These require constant propagation which Semgrep doesn't fully support.
-        run: |
-          semgrep ci \
-            --exclude-rule "java.lang.security.audit.active-debug-code-printstacktrace.active-debug-code-printstacktrace" \
-            --exclude-rule "java.servlets.security.audit.cookie-missing-samesite.cookie-missing-samesite" \
-            --exclude-rule "java.lang.security.audit.cookie-missing-httponly.cookie-missing-httponly" \
-            --exclude-rule "java.servlets.security.audit.cookie-missing-httponly.cookie-missing-httponly" \
-            --exclude-rule "python.django.security.django-no-csrf-token.django-no-csrf-token" \
-            --exclude-rule "html.security.audit.missing-integrity.missing-integrity" \
-            --exclude-rule "javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp" \
-            --exclude-rule "javascript.browser.security.insecure-document-method.insecure-document-method" \
-            --exclude-rule "java.lang.security.audit.unsafe-reflection.unsafe-reflection" \
-            --exclude-rule "java.lang.security.audit.overly-permissive-file-permission.overly-permissive-file-permission" \
-            --exclude-rule "java.lang.security.net.http.base64-encoded-hardcoded-secret.base64-encoded-hardcoded-secret" \
-            --exclude-rule "java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer" \
-            --sarif > semgrep.sarif || true
+        # Custom XSS rules (semgrep-xss-rules.yaml) add detection for:
+        # - PrintWriter.format() as XSS sink
+        # - PrintWriter.printf() as XSS sink
+        # These are missed by default Semgrep rules.
+        run: semgrep ci --config semgrep-xss-rules.yaml --sarif > semgrep.sarif || true
         env:
+          # This token is what enables PR comments and the dashboard
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
       # Uploads results to Security -> Code scanning alerts

@@ -1,0 +1,80 @@
+rules:
+  # XSS via PrintWriter.format() - not detected by default Semgrep rules
+  - id: xss-printwriter-format
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected XSS vulnerability. User input flows into response.getWriter().format()
+      which can lead to Cross-Site Scripting.
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A7:2017-Cross-Site Scripting (XSS)"
+      category: security
+      technology:
+        - java
+        - servlets
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      # Direct request methods
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getHeaders(...)
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
+      - pattern: (HttpServletRequest $REQ).getParameterMap()
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getRequestURI()
+      - pattern: (HttpServletRequest $REQ).getRequestURL()
+      # Cookie sources
+      - pattern: (Cookie $C).getValue()
+      # Enumeration/Iterator patterns
+      - pattern: (java.util.Enumeration<String> $E).nextElement()
+    pattern-sanitizers:
+      # ESAPI encoding
+      - pattern: ESAPI.encoder().encodeForHTML(...)
+      - pattern: org.owasp.esapi.ESAPI.encoder().encodeForHTML(...)
+      # Other common encoders
+      - pattern: StringEscapeUtils.escapeHtml(...)
+      - pattern: HtmlUtils.htmlEscape(...)
+    pattern-sinks:
+      # format() methods on PrintWriter
+      - pattern: (PrintWriter $W).format(...)
+      - pattern: (java.io.PrintWriter $W).format(...)
+      - pattern: $RESPONSE.getWriter().format(...)
+      # printf() methods on PrintWriter
+      - pattern: (PrintWriter $W).printf(...)
+      - pattern: (java.io.PrintWriter $W).printf(...)
+      - pattern: $RESPONSE.getWriter().printf(...)
+
+  # XSS via PrintWriter.format() with Locale - specific pattern seen in benchmark
+  - id: xss-printwriter-format-locale
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected XSS vulnerability. User input flows into response.getWriter().format(Locale, ...)
+      which can lead to Cross-Site Scripting.
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A7:2017-Cross-Site Scripting (XSS)"
+      category: security
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getHeaders(...)
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
+      - pattern: (HttpServletRequest $REQ).getParameterMap()
+      - pattern: (Cookie $C).getValue()
+      - pattern: (java.util.Enumeration<String> $E).nextElement()
+    pattern-sanitizers:
+      - pattern: ESAPI.encoder().encodeForHTML(...)
+      - pattern: org.owasp.esapi.ESAPI.encoder().encodeForHTML(...)
+    pattern-sinks:
+      # format(Locale, String, Object...) pattern
+      - pattern: $WRITER.format($LOCALE, $FMT, ...)
+        metavariable-type:
+          metavariable: $LOCALE
+          type: java.util.Locale
