@@ -51,8 +51,7 @@ jobs:
             --config auto \
             --config p/owasp-top-ten \
             --config p/security-audit \
-            --lang java \
-            --lang js \
+            --lang java,js \
             --taint-intrafile \
             --sarif-output opengrep.sarif \
             .
