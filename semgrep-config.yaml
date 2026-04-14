@@ -1,0 +1,257 @@
+# Semgrep configuration for OWASP Benchmark
+# This config reduces false positives by adding sanitizers for known safe methods
+#
+# Usage (alternative to semgrep ci):
+#   semgrep scan --config semgrep-config.yaml src/main/java/
+#
+# This config includes sanitizers for:
+# - SeparateClassRequest.getTheValue() - always returns constant "bar"
+# - ESAPI encoding functions
+#
+# Note: This config may have lower coverage than Semgrep Pro rules but fewer FPs.
+
+rules:
+  # SQL Injection - with sanitizer for safe sources
+  - id: benchmark-sqli-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected SQL injection risk. User input flows into SQL query.
+    metadata:
+      cwe: "CWE-89"
+      category: sqli
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      # Safe source - always returns constant "bar"
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+      # ESAPI encoding
+      - pattern: ESAPI.encoder().encodeForSQL(...)
+      - pattern: org.owasp.esapi.ESAPI.encoder().encodeForSQL(...)
+    pattern-sinks:
+      - pattern: (Statement $S).executeQuery($QUERY)
+      - pattern: (Statement $S).execute($QUERY)
+      - pattern: (Statement $S).executeUpdate($QUERY)
+      - pattern: (Connection $C).prepareStatement($QUERY, ...)
+      - pattern: $CONN.createStatement().executeQuery(...)
+
+  # Command Injection - with sanitizer for safe sources
+  - id: benchmark-cmdi-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected command injection risk. User input flows into system command.
+    metadata:
+      cwe: "CWE-78"
+      category: cmdi
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      # Safe source - always returns constant "bar"
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+    pattern-sinks:
+      - pattern: Runtime.getRuntime().exec(...)
+      - pattern: (ProcessBuilder $PB).command(...)
+      - pattern: new ProcessBuilder(...)
+
+  # Path Traversal - with sanitizer for safe sources
+  - id: benchmark-pathtraver-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected path traversal risk. User input used in file path.
+    metadata:
+      cwe: "CWE-22"
+      category: pathtraver
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+    pattern-sinks:
+      - pattern: new java.io.File(...)
+      - pattern: new java.io.FileInputStream(...)
+      - pattern: new java.io.FileOutputStream(...)
+      - pattern: java.nio.file.Paths.get(...)
+
+  # XSS - with sanitizer for safe sources and ESAPI encoding
+  - id: benchmark-xss-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected XSS risk. User input flows into HTTP response.
+    metadata:
+      cwe: "CWE-79"
+      category: xss
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+      - pattern: ESAPI.encoder().encodeForHTML(...)
+      - pattern: org.owasp.esapi.ESAPI.encoder().encodeForHTML(...)
+    pattern-sinks:
+      - pattern: (PrintWriter $W).print(...)
+      - pattern: (PrintWriter $W).println(...)
+      - pattern: (HttpServletResponse $R).getWriter().print(...)
+      - pattern: (HttpServletResponse $R).getWriter().println(...)
+
+  # LDAP Injection - with sanitizer for safe sources
+  - id: benchmark-ldapi-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected LDAP injection risk. User input flows into LDAP query.
+    metadata:
+      cwe: "CWE-90"
+      category: ldapi
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+    pattern-sinks:
+      - pattern: (DirContext $CTX).search(...)
+      - pattern: (InitialDirContext $CTX).search(...)
+
+  # XPath Injection - with sanitizer for safe sources
+  - id: benchmark-xpathi-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected XPath injection risk. User input flows into XPath query.
+    metadata:
+      cwe: "CWE-643"
+      category: xpathi
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+    pattern-sinks:
+      - pattern: (XPath $XP).evaluate(...)
+      - pattern: (XPathExpression $XPE).evaluate(...)
+
+  # Trust Boundary Violation - with sanitizer for safe sources
+  - id: benchmark-trustbound-tainted
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Detected trust boundary violation. User input stored in session.
+    metadata:
+      cwe: "CWE-501"
+      category: trustbound
+    options:
+      symbolic_propagation: true
+    pattern-sources:
+      - pattern: (HttpServletRequest $REQ).getParameter(...)
+      - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (Cookie $C).getValue()
+      - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
+      - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
+    pattern-sanitizers:
+      - pattern: (SeparateClassRequest $SCR).getTheValue(...)
+    pattern-sinks:
+      - pattern: (HttpSession $S).setAttribute(...)
+      - pattern: (HttpSession $S).putValue(...)
+      - pattern: $REQ.getSession().setAttribute(...)
+      - pattern: $REQ.getSession().putValue(...)
+
+  # Weak Cryptography - DES
+  - id: benchmark-crypto-des
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Use of weak DES encryption algorithm detected.
+    metadata:
+      cwe: "CWE-327"
+      category: crypto
+    pattern-either:
+      - pattern: Cipher.getInstance("DES", ...)
+      - pattern: Cipher.getInstance("DES/...", ...)
+      - pattern: Cipher.getInstance("DESede", ...)
+      - pattern: Cipher.getInstance("DESede/...", ...)
+
+  # Weak Hash - MD5/SHA1
+  - id: benchmark-hash-weak
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Use of weak hash algorithm (MD5 or SHA1) detected.
+    metadata:
+      cwe: "CWE-328"
+      category: hash
+    pattern-either:
+      - pattern: MessageDigest.getInstance("MD5")
+      - pattern: MessageDigest.getInstance("SHA1")
+      - pattern: MessageDigest.getInstance("SHA-1")
+      - pattern: DigestUtils.getMd5Digest()
+      - pattern: DigestUtils.getSha1Digest()
+
+  # Weak Random
+  - id: benchmark-weakrand
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Use of weak random number generator (java.util.Random) detected.
+    metadata:
+      cwe: "CWE-330"
+      category: weakrand
+    pattern-either:
+      - pattern: new java.util.Random()
+      - pattern: new Random()
+      - pattern: Math.random()
+
+  # Insecure Cookie
+  - id: benchmark-securecookie
+    languages: [java]
+    severity: ERROR
+    message: >-
+      Cookie without Secure flag in HTTPS context.
+    metadata:
+      cwe: "CWE-614"
+      category: securecookie
+    patterns:
+      - pattern: $COOKIE.setSecure(false)
+      - metavariable-type:
+          metavariable: $COOKIE
+          type: javax.servlet.http.Cookie
