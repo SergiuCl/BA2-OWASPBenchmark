@@ -3,9 +3,9 @@ name: Semgrep AppSec
 on:
   workflow_dispatch:
   push:
-    branches: [ "semgrep-workflow" ]
+    branches: [ dev ]
   pull_request:
-    branches: [ "semgrep-workflow" ]
+    branches: [ dev ]
 
 jobs:
   semgrep-analyze:

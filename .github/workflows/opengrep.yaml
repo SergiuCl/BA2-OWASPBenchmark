@@ -3,9 +3,9 @@ name: Opengrep Analyze
 on:
   workflow_dispatch:
   push:
-    branches: [ "opengrep-workflow" ]
+    branches: [ dev ]
   pull_request:
-    branches: [ "opengrep-workflow" ]
+    branches: [ dev ]
 
 jobs:
   opengrep-scan:
