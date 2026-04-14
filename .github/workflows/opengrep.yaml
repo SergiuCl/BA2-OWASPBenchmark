@@ -1,0 +1,72 @@
+name: Opengrep Analyze
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "opengrep-workflow" ]
+  pull_request:
+    branches: [ "opengrep-workflow" ]
+
+jobs:
+  opengrep-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read           # Required for workflow run access
+      pull-requests: write    # Required for the Bot to post comments
+      security-events: write  # Required for the GitHub Security tab
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Installs cosign so Opengrep's installer can verify signatures.
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # Installs Opengrep and adds it to PATH for following steps
+      - name: Install Opengrep (with signature verification)
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash -s -- --verify-signatures
+          echo "$HOME/.opengrep/cli/latest" >> "$GITHUB_PATH"
+
+      - name: Verify Opengrep installation
+        run: opengrep --version
+
+      # Runs Opengrep and writes a SARIF report
+      - name: Run Opengrep Scan (SARIF)
+        run: |
+          # Optional: ignore common build/generated dirs (or commit a .semgrepignore/.opengrepignore)
+          cat > .semgrepignore <<'EOF'
+          node_modules/
+          dist/
+          build/
+          target/
+          .next/
+          coverage/
+          EOF
+          
+          # Stronger scan: combine multiple configs + stronger taint
+          opengrep scan \
+            --config auto \
+            --config p/owasp-top-ten \
+            --config p/security-audit \
+            --include='*.java' --include='*.js' \
+            --taint-intrafile \
+            --sarif-output opengrep.sarif \
+            .
+
+      # Uploads results to Security -> Code scanning alerts
+      - name: Upload to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: opengrep.sarif
+        if: always()  # Upload even if the scan fails
+
+      # Makes the raw SARIF file available in the "Actions" run summary
+      - name: Upload SARIF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: opengrep-sarif
+          path: opengrep.sarif
+        if: always()
