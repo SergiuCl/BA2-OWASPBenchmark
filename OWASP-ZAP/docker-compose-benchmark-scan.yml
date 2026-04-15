@@ -1,0 +1,35 @@
+services:
+  benchmark:
+    image: owasp/benchmark:latest
+    container_name: owasp-benchmark
+    working_dir: /owasp/BenchmarkJava
+    command: ["/bin/bash", "-lc", "./runRemoteAccessibleBenchmark.sh"]
+    ports:
+      - "8443:8443"
+    networks:
+      - zap-network
+    pull_policy: always
+
+  zap-af:
+    image: zaproxy/zap-stable
+    volumes:
+      - ./reports:/zap/wrk/reports:rw
+      - ./zap-plans:/zap/wrk/zap-plans:rw
+      - ./api-specs:/zap/wrk/api-specs:ro
+    entrypoint: /bin/bash
+    command: >
+      -c "
+       test -n \"$$PLAN_FILE\" && /zap/zap.sh -cmd -autorun \"$$PLAN_FILE\" || { echo 'PLAN_FILE not set'; exit 2; }
+       "
+    environment:
+      - JAVA_OPTS=-Xmx2048m
+    profiles:
+      - af
+    networks:
+      - zap-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  zap-network:
+    driver: bridge

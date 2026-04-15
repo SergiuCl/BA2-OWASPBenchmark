@@ -1,0 +1,60 @@
+plan:
+  title: "M@RS AF Full Scan"
+  description: "Active scan of M@RS"
+  version: "1.0.0"
+
+env:
+  contexts:
+    - name: "mars"
+      urls:
+        - "https://host.docker.internal:8443/benchmark"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+
+jobs:
+  - type: spider
+    parameters:
+      context: "mars"
+      maxDuration: 10
+
+  - type: spiderAjax
+    parameters:
+      context: "mars"
+      maxDuration: 15
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: activeScan
+    parameters:
+      context: "mars"
+      policy: "Default Policy"
+      maxRuleDurationInMins: 15
+
+  - type: report
+    parameters:
+      template: "traditional-html"
+      reportDir: "/zap/wrk/reports/report-2025-12-16-2"
+      reportFile: "full-scan-report.html"
+      reportTitle: "ZAP AF Full Scan - M@RS"
+
+  - type: report
+    parameters:
+      template: "traditional-json"
+      reportDir: "/zap/wrk/reports/report-2025-12-16-2"
+      reportFile: "full-scan-report.json"
+      reportTitle: "ZAP AF Full Scan - M@RS"
+
+  - type: report
+    parameters:
+      template: "traditional-md"
+      reportDir: "/zap/wrk/reports/report-2025-12-16-2"
+      reportFile: "full-scan-report.md"
+      reportTitle: "ZAP AF Full Scan - M@RS"
+
+  - type: outputSummary
+    parameters:
+      format: LONG
+      summaryFile: "/zap/wrk/reports/report-2025-12-16-2/full-scan-summary.json"
