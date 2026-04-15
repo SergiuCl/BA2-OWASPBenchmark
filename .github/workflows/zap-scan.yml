@@ -76,9 +76,11 @@ jobs:
           echo "Generated ZAP plan:"
           cat "$GENERATED"
 
-      # Create reports directory
+      # Create reports directory with write access for ZAP container (runs as UID 1000)
       - name: Prepare reports directory
-        run: mkdir -p OWASP-ZAP/reports
+        run: |
+          mkdir -p OWASP-ZAP/reports
+          chmod 777 OWASP-ZAP/reports
 
       # Run ZAP scan via Docker
       - name: Run ZAP ${{ inputs.scan_type }} scan
