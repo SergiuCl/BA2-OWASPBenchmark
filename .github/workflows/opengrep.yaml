@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Installs cosign so Opengrep's installer can verify signatures.
       - name: Install cosign
@@ -65,7 +65,7 @@ jobs:
 
       # Makes the raw SARIF file available in the "Actions" run summary
       - name: Upload SARIF artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: opengrep-sarif
           path: opengrep.sarif
