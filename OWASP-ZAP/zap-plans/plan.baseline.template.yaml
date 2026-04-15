@@ -1,0 +1,61 @@
+plan:
+  title: "Benchmark AF Baseline"
+  description: "Passive scan (no active attacks)"
+  version: "1.0.0"
+
+env:
+  contexts:
+    - name: "benchmark"
+      urls:
+        - "${TARGET_URL}"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+
+jobs:
+  - type: spider
+    parameters:
+      context: "benchmark"
+      maxDuration: 3
+
+  - type: spiderAjax
+    parameters:
+      context: "benchmark"
+      maxDuration: 2
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+
+  - type: report
+    parameters:
+      template: "traditional-html"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "baseline-report.html"
+      reportTitle: "ZAP AF Baseline - M@RS"
+
+  - type: report
+    parameters:
+      template: "traditional-json"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "baseline-report.json"
+      reportTitle: "ZAP AF Baseline - M@RS"
+
+  - type: report
+    parameters:
+      template: "traditional-md"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "baseline-report.md"
+      reportTitle: "ZAP AF Baseline - M@RS"
+
+  - type: report
+    parameters:
+      template: "traditional-xml"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "baseline-scan-report.xml"
+      reportTitle: "ZAP AF Baseline - M@RS"
+
+  - type: outputSummary
+    parameters:
+      format: LONG
+      summaryFile: "${REPORT_DIR}/baseline-summary.json"

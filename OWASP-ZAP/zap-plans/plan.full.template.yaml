@@ -1,0 +1,57 @@
+plan:
+  title: "Benchmark AF Full Scan"
+  description: "Active scan of M@RS"
+  version: "1.0.0"
+
+env:
+  contexts:
+    - name: "benchmark"
+      urls:
+        - "${TARGET_URL}"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+
+jobs:
+  - type: spider
+    parameters:
+      context: "benchmark"
+      maxDuration: 10
+
+  - type: spiderAjax
+    parameters:
+      context: "benchmark"
+      maxDuration: 10
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 10
+
+  - type: activeScan
+    parameters:
+      context: "benchmark"
+      policy: "Default Policy"
+      maxRuleDurationInMins: 15
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 10
+
+  - type: report
+    parameters:
+      template: "traditional-html"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "full-scan-report.html"
+      reportTitle: "ZAP AF Full Scan - M@RS"
+
+  - type: report
+    parameters:
+      template: "traditional-xml"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "full-scan-report.xml"
+      reportTitle: "ZAP AF Full Scan - M@RS"
+
+  - type: outputSummary
+    parameters:
+      format: LONG
+      summaryFile: "${REPORT_DIR}/full-scan-summary.json"
