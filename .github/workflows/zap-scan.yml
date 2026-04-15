@@ -1,0 +1,102 @@
+name: OWASP ZAP DAST Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'ZAP scan type'
+        required: true
+        default: 'baseline'
+        type: choice
+        options:
+          - baseline
+          - full
+
+jobs:
+  zap-dast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      # Build the Benchmark application
+      - name: Build Benchmark
+        run: mvn clean package -DskipTests -q
+
+      # Start the Benchmark application in the background
+      - name: Start Benchmark application
+        run: |
+          mvn cargo:run -Pdeploy -Drunenv=remote -q &
+          echo "Benchmark starting in background..."
+
+      # Wait for the application to be ready (HTTPS on port 8443)
+      - name: Wait for Benchmark to be ready
+        run: |
+          echo "Waiting for Benchmark application on https://localhost:8443/benchmark/"
+          TIMEOUT=300
+          INTERVAL=5
+          elapsed=0
+          while [ $elapsed -lt $TIMEOUT ]; do
+            HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost:8443/benchmark/ 2>/dev/null || echo "000")
+            if echo "$HTTP_CODE" | grep -qE "^(200|301|302|303)$"; then
+              echo "Benchmark is ready! (HTTP $HTTP_CODE) after ${elapsed}s"
+              exit 0
+            fi
+            echo "Waiting... ($elapsed/${TIMEOUT}s) - HTTP $HTTP_CODE"
+            sleep $INTERVAL
+            elapsed=$((elapsed + INTERVAL))
+          done
+          echo "ERROR: Benchmark did not start within ${TIMEOUT}s"
+          exit 1
+
+      # Generate the ZAP automation framework plan from the template
+      - name: Generate ZAP plan
+        run: |
+          SCAN_TYPE="${{ inputs.scan_type }}"
+          TEMPLATE="OWASP-ZAP/zap-plans/plan.${SCAN_TYPE}.template.yaml"
+          GENERATED="OWASP-ZAP/zap-plans/plan.generated.yaml"
+
+          sed -e 's|${TARGET_URL}|https://host.docker.internal:8443/benchmark/|g' \
+              -e 's|${REPORT_DIR}|/zap/wrk/reports|g' \
+              "$TEMPLATE" > "$GENERATED"
+
+          echo "Generated ZAP plan:"
+          cat "$GENERATED"
+
+      # Create reports directory
+      - name: Prepare reports directory
+        run: mkdir -p OWASP-ZAP/reports
+
+      # Run ZAP scan via Docker
+      - name: Run ZAP ${{ inputs.scan_type }} scan
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -v "${{ github.workspace }}/OWASP-ZAP/reports:/zap/wrk/reports:rw" \
+            -v "${{ github.workspace }}/OWASP-ZAP/zap-plans:/zap/wrk/zap-plans:ro" \
+            -e JAVA_OPTS="-Xmx2048m" \
+            zaproxy/zap-stable \
+            zap.sh -cmd -autorun /zap/wrk/zap-plans/plan.generated.yaml
+
+      # Upload ZAP reports as artifacts
+      - name: Upload ZAP reports
+        uses: actions/upload-artifact@v6
+        with:
+          name: zap-${{ inputs.scan_type }}-reports
+          path: OWASP-ZAP/reports/
+        if: always()

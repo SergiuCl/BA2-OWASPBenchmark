@@ -1,6 +1,6 @@
 plan:
-  title: "Benchmark AF Full Scan"
-  description: "Active scan of M@RS"
+  title: "OWASP Benchmark AF Full Scan"
+  description: "Active scan of OWASP Benchmark"
   version: "1.0.0"
 
 env:
@@ -42,14 +42,21 @@ jobs:
       template: "traditional-html"
       reportDir: "${REPORT_DIR}"
       reportFile: "full-scan-report.html"
-      reportTitle: "ZAP AF Full Scan - M@RS"
+      reportTitle: "ZAP AF Full Scan - OWASP Benchmark"
+
+  - type: report
+    parameters:
+      template: "traditional-json"
+      reportDir: "${REPORT_DIR}"
+      reportFile: "full-scan-report.json"
+      reportTitle: "ZAP AF Full Scan - OWASP Benchmark"
 
   - type: report
     parameters:
       template: "traditional-xml"
       reportDir: "${REPORT_DIR}"
       reportFile: "full-scan-report.xml"
-      reportTitle: "ZAP AF Full Scan - M@RS"
+      reportTitle: "ZAP AF Full Scan - OWASP Benchmark"
 
   - type: outputSummary
     parameters:

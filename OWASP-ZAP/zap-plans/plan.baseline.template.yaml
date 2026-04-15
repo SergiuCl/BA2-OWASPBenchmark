@@ -1,5 +1,5 @@
 plan:
-  title: "Benchmark AF Baseline"
+  title: "OWASP Benchmark AF Baseline"
   description: "Passive scan (no active attacks)"
   version: "1.0.0"
 
@@ -32,28 +32,28 @@ jobs:
       template: "traditional-html"
       reportDir: "${REPORT_DIR}"
       reportFile: "baseline-report.html"
-      reportTitle: "ZAP AF Baseline - M@RS"
+      reportTitle: "ZAP AF Baseline - OWASP Benchmark"
 
   - type: report
     parameters:
       template: "traditional-json"
       reportDir: "${REPORT_DIR}"
       reportFile: "baseline-report.json"
-      reportTitle: "ZAP AF Baseline - M@RS"
+      reportTitle: "ZAP AF Baseline - OWASP Benchmark"
 
   - type: report
     parameters:
       template: "traditional-md"
       reportDir: "${REPORT_DIR}"
       reportFile: "baseline-report.md"
-      reportTitle: "ZAP AF Baseline - M@RS"
+      reportTitle: "ZAP AF Baseline - OWASP Benchmark"
 
   - type: report
     parameters:
       template: "traditional-xml"
       reportDir: "${REPORT_DIR}"
       reportFile: "baseline-scan-report.xml"
-      reportTitle: "ZAP AF Baseline - M@RS"
+      reportTitle: "ZAP AF Baseline - OWASP Benchmark"
 
   - type: outputSummary
     parameters:
