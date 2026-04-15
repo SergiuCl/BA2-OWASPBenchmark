@@ -34,14 +34,12 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
-      # Build the Benchmark application
-      - name: Build Benchmark
-        run: mvn clean package -DskipTests -q
-
-      # Start the Benchmark application in the background
-      - name: Start Benchmark application
+      # Build and start the Benchmark application in the background
+      # Must use -Pdeploy for the full command so the database gets initialized
+      # during the package phase (database-server + database-init ant targets)
+      - name: Build and start Benchmark application
         run: |
-          mvn cargo:run -Pdeploy -Drunenv=remote -q &
+          mvn clean package cargo:run -Pdeploy -Drunenv=remote &
           echo "Benchmark starting in background..."
 
       # Wait for the application to be ready (HTTPS on port 8443)
