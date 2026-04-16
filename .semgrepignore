@@ -1,34 +1,11 @@
 # Semgrep ignore file for OWASP Benchmark
-# Reduces false positives by excluding non-application code
 
-# Exclude scorecard/results (HTML, PNG, CSV reports)
+# Exclude non-application directories
 scorecard/
 results/
-
-# Exclude test files that are not part of the benchmark
-src/test/
-
-# Exclude build artifacts
 target/
 .mvn/
-*.class
-
-# Exclude configuration files
-*.xml
-*.properties
-*.json
-*.yaml
-*.yml
-
-# Exclude documentation
-*.md
-*.txt
-*.html
-*.png
-*.css
-*.js
-
-# Exclude IDE and tool configs
 .idea/
 .vscode/
 .git/
+src/test/

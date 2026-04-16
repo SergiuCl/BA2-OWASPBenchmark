@@ -36,23 +36,12 @@ jobs:
       # Runs Opengrep and writes a SARIF report
       - name: Run Opengrep Scan (SARIF)
         run: |
-          # Optional: ignore common build/generated dirs (or commit a .semgrepignore/.opengrepignore)
-          cat > .semgrepignore <<'EOF'
-          node_modules/
-          dist/
-          build/
-          target/
-          .next/
-          coverage/
-          EOF
-          
-          # Stronger scan: combine multiple configs + stronger taint
           opengrep scan \
             --config auto \
             --config p/owasp-top-ten \
             --config p/security-audit \
-            --include='*.java' --include='*.js' \
-            --taint-intrafile \
+            --config p/java \
+            --suppress-errors \
             --sarif-output opengrep.sarif \
             .
 
