@@ -41,9 +41,8 @@ jobs:
             --config p/owasp-top-ten \
             --config p/security-audit \
             --config p/java \
-            --suppress-errors \
             --sarif-output opengrep.sarif \
-            .
+            . || true
 
       # Uploads results to Security -> Code scanning alerts
       - name: Upload to GitHub Security Tab

@@ -26,7 +26,7 @@ jobs:
       - name: Run Semgrep CI & Generate SARIF
         # We add '|| true' to ensure the workflow continues even if bugs are found
         # so that the SARIF file is always uploaded for your research.
-        run: semgrep ci --sarif --config p/owasp-top-ten --config p/security-audit > semgrep.sarif || true
+        run: semgrep ci --sarif > semgrep.sarif || true
         env:
           # This token is what enables PR comments and the dashboard
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
