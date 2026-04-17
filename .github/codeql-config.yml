@@ -1,0 +1,9 @@
+name: "CodeQL Config"
+
+query-filters:
+  - include:
+      tags contain: security
+
+threat-models:
+  - remote
+  - local
