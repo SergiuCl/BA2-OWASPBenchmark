@@ -39,7 +39,7 @@ jobs:
       # during the package phase (database-server + database-init ant targets)
       - name: Build and start Benchmark application
         run: |
-          mvn clean package cargo:run -Pdeploy -Drunenv=remote &
+          MAVEN_OPTS="-Xmx4g" mvn clean package cargo:run -Pdeploy -Drunenv=remote &
           echo "Benchmark starting in background..."
 
       # Wait for the application to be ready (HTTPS on port 8443)
