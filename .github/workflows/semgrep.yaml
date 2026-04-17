@@ -26,7 +26,8 @@ jobs:
       - name: Run Semgrep CI & Generate SARIF
         # We add '|| true' to ensure the workflow continues even if bugs are found
         # so that the SARIF file is always uploaded for your research.
-        run: semgrep ci --sarif > semgrep.sarif || true
+        # /usr/bin/time -v captures peak memory and CPU time for performance analysis.
+        run: /usr/bin/time -v sh -c 'semgrep ci --sarif > semgrep.sarif || true' 2>&1 | tee semgrep-timing.txt
         env:
           # This token is what enables PR comments and the dashboard
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
@@ -44,4 +45,11 @@ jobs:
         with:
           name: semgrep-sarif
           path: semgrep.sarif
+        if: always()
+
+      - name: Upload timing data
+        uses: actions/upload-artifact@v6
+        with:
+          name: semgrep-timing
+          path: semgrep-timing.txt
         if: always()

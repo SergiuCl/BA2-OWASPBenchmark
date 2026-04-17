@@ -36,13 +36,13 @@ jobs:
       # Runs Opengrep and writes a SARIF report
       - name: Run Opengrep Scan (SARIF)
         run: |
-          opengrep scan \
+          /usr/bin/time -v opengrep scan \
             --config auto \
             --config p/owasp-top-ten \
             --config p/security-audit \
             --config p/java \
             --sarif-output opengrep.sarif \
-            . || true
+            . 2>&1 | tee opengrep-timing.txt || true
 
       # Uploads results to Security -> Code scanning alerts
       - name: Upload to GitHub Security Tab
@@ -57,4 +57,11 @@ jobs:
         with:
           name: opengrep-sarif
           path: opengrep.sarif
+        if: always()
+
+      - name: Upload timing data
+        uses: actions/upload-artifact@v6
+        with:
+          name: opengrep-timing
+          path: opengrep-timing.txt
         if: always()
