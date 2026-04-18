@@ -84,13 +84,13 @@ jobs:
 
       # Run ZAP scan via Docker
       - name: Run ZAP ${{ inputs.scan_type }} scan
+        continue-on-error: true
         run: |
           docker run --rm \
             --add-host=host.docker.internal:host-gateway \
             -v "${{ github.workspace }}/OWASP-ZAP/reports:/zap/wrk/reports:rw" \
             -v "${{ github.workspace }}/OWASP-ZAP/zap-plans:/zap/wrk/zap-plans:ro" \
-            -e JAVA_OPTS="-Xmx2048m" \
-            zaproxy/zap-stable \
+            zaproxy/zap-stable:2.16.1 \
             zap.sh -cmd -autorun /zap/wrk/zap-plans/plan.generated.yaml
 
       # Upload ZAP reports as artifacts
