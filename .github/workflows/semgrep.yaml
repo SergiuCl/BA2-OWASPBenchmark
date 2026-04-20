@@ -3,32 +3,28 @@ name: Semgrep AppSec
 on:
   workflow_dispatch:
   push:
-    branches: [ dev ]
+    branches: [ main ]
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
 
 jobs:
   semgrep-analyze:
     runs-on: ubuntu-latest
-    # Necessary permissions for Semgrep to interact with your PR
     permissions:
       contents: read
-      pull-requests: write    # Required for the Bot to post comments
-      security-events: write  # Required for the GitHub Security tab
+      pull-requests: write
+      security-events: write
 
     container:
-      image: semgrep/semgrep
+      image: semgrep/semgrep:1.158.0
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
       - name: Run Semgrep CI & Generate SARIF
-        # We add '|| true' to ensure the workflow continues even if bugs are found
-        # so that the SARIF file is always uploaded for your research.
-        run: semgrep ci --sarif --include='*.java' --include='*.js' > semgrep.sarif || true
+        run: semgrep ci --sarif --config semgrep-config.yaml --config semgrep-xss-rules.yaml --include='*.java' > semgrep.sarif || true
         env:
-          # This token is what enables PR comments and the dashboard
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
       # Uploads results to Security -> Code scanning alerts

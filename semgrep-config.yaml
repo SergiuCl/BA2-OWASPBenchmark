@@ -26,6 +26,9 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
+      - pattern: (HttpServletRequest $REQ).getParameterMap()
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -36,10 +39,10 @@ rules:
       - pattern: ESAPI.encoder().encodeForSQL(...)
       - pattern: org.owasp.esapi.ESAPI.encoder().encodeForSQL(...)
     pattern-sinks:
-      - pattern: (Statement $S).executeQuery($QUERY)
-      - pattern: (Statement $S).execute($QUERY)
-      - pattern: (Statement $S).executeUpdate($QUERY)
-      - pattern: (Connection $C).prepareStatement($QUERY, ...)
+      - pattern: (Statement $S).executeQuery(...)
+      - pattern: (Statement $S).execute(...)
+      - pattern: (Statement $S).executeUpdate(...)
+      - pattern: (Connection $C).prepareStatement(...)
       - pattern: $CONN.createStatement().executeQuery(...)
 
   # Command Injection - with sanitizer for safe sources
@@ -57,6 +60,8 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -65,6 +70,7 @@ rules:
       - pattern: (SeparateClassRequest $SCR).getTheValue(...)
     pattern-sinks:
       - pattern: Runtime.getRuntime().exec(...)
+      - pattern: (Runtime $R).exec(...)
       - pattern: (ProcessBuilder $PB).command(...)
       - pattern: new ProcessBuilder(...)
 
@@ -83,6 +89,8 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -90,9 +98,13 @@ rules:
       - pattern: (SeparateClassRequest $SCR).getTheValue(...)
     pattern-sinks:
       - pattern: new java.io.File(...)
+      - pattern: new File(...)
       - pattern: new java.io.FileInputStream(...)
+      - pattern: new FileInputStream(...)
       - pattern: new java.io.FileOutputStream(...)
+      - pattern: new FileOutputStream(...)
       - pattern: java.nio.file.Paths.get(...)
+      - pattern: Paths.get(...)
 
   # XSS - with sanitizer for safe sources and ESAPI encoding
   - id: benchmark-xss-tainted
@@ -109,6 +121,8 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -119,8 +133,12 @@ rules:
     pattern-sinks:
       - pattern: (PrintWriter $W).print(...)
       - pattern: (PrintWriter $W).println(...)
+      - pattern: (PrintWriter $W).format(...)
+      - pattern: (PrintWriter $W).printf(...)
       - pattern: (HttpServletResponse $R).getWriter().print(...)
       - pattern: (HttpServletResponse $R).getWriter().println(...)
+      - pattern: (HttpServletResponse $R).getWriter().format(...)
+      - pattern: (HttpServletResponse $R).getWriter().printf(...)
 
   # LDAP Injection - with sanitizer for safe sources
   - id: benchmark-ldapi-tainted
@@ -137,6 +155,8 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -161,6 +181,8 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -168,6 +190,7 @@ rules:
       - pattern: (SeparateClassRequest $SCR).getTheValue(...)
     pattern-sinks:
       - pattern: (XPath $XP).evaluate(...)
+      - pattern: (XPath $XP).compile(...)
       - pattern: (XPathExpression $XPE).evaluate(...)
 
   # Trust Boundary Violation - with sanitizer for safe sources
@@ -185,6 +208,8 @@ rules:
     pattern-sources:
       - pattern: (HttpServletRequest $REQ).getParameter(...)
       - pattern: (HttpServletRequest $REQ).getHeader(...)
+      - pattern: (HttpServletRequest $REQ).getQueryString()
+      - pattern: (HttpServletRequest $REQ).getParameterValues(...)
       - pattern: (Cookie $C).getValue()
       - pattern: (SeparateClassRequest $SCR).getTheParameter(...)
       - pattern: (SeparateClassRequest $SCR).getTheCookie(...)
@@ -205,11 +230,14 @@ rules:
     metadata:
       cwe: "CWE-327"
       category: crypto
-    pattern-either:
-      - pattern: Cipher.getInstance("DES", ...)
-      - pattern: Cipher.getInstance("DES/...", ...)
-      - pattern: Cipher.getInstance("DESede", ...)
-      - pattern: Cipher.getInstance("DESede/...", ...)
+    patterns:
+      - pattern: $CIPHER.getInstance($ALG, ...)
+      - metavariable-regex:
+          metavariable: $ALG
+          regex: "\"(DES|DESede)(/.*)?\""
+      - metavariable-regex:
+          metavariable: $CIPHER
+          regex: "(javax\\.crypto\\.)?Cipher"
 
   # Weak Hash - MD5/SHA1
   - id: benchmark-hash-weak
@@ -222,8 +250,17 @@ rules:
       category: hash
     pattern-either:
       - pattern: MessageDigest.getInstance("MD5")
+      - pattern: MessageDigest.getInstance("MD5", ...)
       - pattern: MessageDigest.getInstance("SHA1")
+      - pattern: MessageDigest.getInstance("SHA1", ...)
       - pattern: MessageDigest.getInstance("SHA-1")
+      - pattern: MessageDigest.getInstance("SHA-1", ...)
+      - pattern: java.security.MessageDigest.getInstance("MD5")
+      - pattern: java.security.MessageDigest.getInstance("MD5", ...)
+      - pattern: java.security.MessageDigest.getInstance("SHA1")
+      - pattern: java.security.MessageDigest.getInstance("SHA1", ...)
+      - pattern: java.security.MessageDigest.getInstance("SHA-1")
+      - pattern: java.security.MessageDigest.getInstance("SHA-1", ...)
       - pattern: DigestUtils.getMd5Digest()
       - pattern: DigestUtils.getSha1Digest()
 

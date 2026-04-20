@@ -3,9 +3,9 @@ name: Opengrep Analyze
 on:
   workflow_dispatch:
   push:
-    branches: [ dev ]
+    branches: [ main ]
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
 
 jobs:
   opengrep-scan:
@@ -36,7 +36,6 @@ jobs:
       # Runs Opengrep and writes a SARIF report
       - name: Run Opengrep Scan (SARIF)
         run: |
-          # Optional: ignore common build/generated dirs (or commit a .semgrepignore/.opengrepignore)
           cat > .semgrepignore <<'EOF'
           node_modules/
           dist/
@@ -51,8 +50,9 @@ jobs:
             --config auto \
             --config p/owasp-top-ten \
             --config p/security-audit \
-            --include='*.java' --include='*.js' \
-            --taint-intrafile \
+            --config semgrep-config.yaml \
+            --config semgrep-xss-rules.yaml \
+            --include='*.java' \
             --sarif-output opengrep.sarif \
             .
 

@@ -1,0 +1,10 @@
+name: "OWASP Benchmark CodeQL Config"
+
+queries:
+  - uses: security-extended
+  - uses: security-experimental
+  - uses: security-and-quality
+
+threat-models:
+  - local
+  - remote
