@@ -24,10 +24,10 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
-      # Installs Opengrep and adds it to PATH for following steps
-      - name: Install Opengrep (with signature verification)
+      # Installs Opengrep at a pinned version (1.17.0) and adds it to PATH for following steps
+      - name: Install Opengrep (pinned, with signature verification)
         run: |
-          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash -s -- --verify-signatures
+          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/v1.17.0/install.sh | bash -s -- -v v1.17.0 --verify-signatures
           echo "$HOME/.opengrep/cli/latest" >> "$GITHUB_PATH"
 
       - name: Verify Opengrep installation
