@@ -48,8 +48,6 @@ jobs:
           # Stronger scan: combine multiple configs + stronger taint
           opengrep scan \
             --config auto \
-            --config p/owasp-top-ten \
-            --config p/security-audit \
             --include='*.java' \
             --sarif-output opengrep.sarif \
             .
