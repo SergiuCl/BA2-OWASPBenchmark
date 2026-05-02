@@ -36,16 +36,6 @@ jobs:
       # Runs Opengrep and writes a SARIF report
       - name: Run Opengrep Scan (SARIF)
         run: |
-          cat > .semgrepignore <<'EOF'
-          node_modules/
-          dist/
-          build/
-          target/
-          .next/
-          coverage/
-          EOF
-          
-          # Stronger scan: combine multiple configs + stronger taint
           opengrep scan \
             --config auto \
             --include='*.java' \
