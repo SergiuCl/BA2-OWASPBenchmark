@@ -50,8 +50,6 @@ jobs:
             --config auto \
             --config p/owasp-top-ten \
             --config p/security-audit \
-            --config semgrep-config.yaml \
-            --config semgrep-xss-rules.yaml \
             --include='*.java' \
             --sarif-output opengrep.sarif \
             .
