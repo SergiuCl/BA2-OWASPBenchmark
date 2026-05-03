@@ -13,7 +13,6 @@ jobs:
     permissions:
       contents: read
       actions: read           # Required for workflow run access
-      pull-requests: write    # Required for the Bot to post comments
       security-events: write  # Required for the GitHub Security tab
 
     steps:
